@@ -1,0 +1,47 @@
+[
+    {
+        "profile_image": "President",
+        "profile_name": "Efe",
+        "profile_bio": "Sightseeing and traveling"
+    },
+    {
+        "profile_image": "Vice President",
+        "profile_name": "Defne",
+        "profile_bio": "Rowing"
+    },
+    {
+        "profile_image": "Committee Member",
+        "profile_name": "Martin",
+        "profile_bio": "Badminton, guitar"
+    },
+    {
+        "profile_image": "Finance Director",
+        "profile_name": "Ricky",
+        "profile_bio": "None"
+    },
+    {
+        "profile_image": "Senior SWE Committee Director",
+        "profile_name": "Anwar",
+        "profile_bio": "Pickleball"
+    },
+    {
+        "profile_image": "Junior SWE Committee Director",
+        "profile_name": "Xander",
+        "profile_bio": "None"
+    },
+    {
+        "profile_image": "Senior ML Committee Director",
+        "profile_name": "Konnor",
+        "profile_bio": "None"
+    },
+    {
+        "profile_image": "Junior ML Committee Director",
+        "profile_name": "Jason",
+        "profile_bio": "Reading, skiing"
+    },
+    {
+        "profile_image": "Outreach Coordinator",
+        "profile_name": "Shriya",
+        "profile_bio": "None"
+    }
+]
