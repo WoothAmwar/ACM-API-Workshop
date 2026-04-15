@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profiles API Viewer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #profiles-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .profile-card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .profile-role {
+            color: var(--accent);
+            font-weight: 500;
+            margin: 0 0 1rem 0;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+
+        .profile-hobby {
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            width: 100%;
+            grid-column: 1 / -1;
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ef4444;
+            text-align: center;
+            width: 100%;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>API Profiles</h1>
+    <div id="profiles-container">
+        <div class="loading">Loading profiles...</div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://127.0.0.1:5000/api';
+        const container = document.getElementById('profiles-container');
+
+        async function fetchProfiles() {
+            try {
+                // 1. Fetch the list of names
+                const namesResponse = await fetch(`${BASE_URL}/names`);
+                
+                if (!namesResponse.ok) {
+                    throw new Error(`Failed to fetch names: ${namesResponse.statusText}`);
+                }
+                
+                const names = await namesResponse.json();
+                
+                // Clear loading state
+                container.innerHTML = '';
+                
+                if (names.length === 0) {
+                    container.innerHTML = '<div class="loading">No profiles found.</div>';
+                    return;
+                }
+
+                // 2. Iterate through names and fetch details concurrently
+                // Using Promise.all to load everything faster instead of one-by-one
+                const profilePromises = names.map(async (name) => {
+                    try {
+                        const [roleRes, hobbyRes] = await Promise.all([
+                            fetch(`${BASE_URL}/roles/${name}`),
+                            fetch(`${BASE_URL}/hobbies/${name}`)
+                        ]);
+
+                        const roleData = roleRes.ok ? await roleRes.json() : { role: 'Unknown' };
+                        const hobbyData = hobbyRes.ok ? await hobbyRes.json() : { hobby: 'Unknown' };
+
+                        return {
+                            name: name,
+                            role: roleData.role || 'Unknown',
+                            hobby: hobbyData.hobby || 'Unknown'
+                        };
+                    } catch (err) {
+                        return { name, role: 'Error loading', hobby: 'Error loading' };
+                    }
+                });
+
+                const profiles = await Promise.all(profilePromises);
+
+                // 3. Generate HTML for each profile
+                profiles.forEach(profile => {
+                    const card = document.createElement('div');
+                    card.className = 'profile-card';
+                    card.innerHTML = `
+                        <h2 class="profile-name">${profile.name}</h2>
+                        <h3 class="profile-role">${profile.role}</h3>
+                        <p class="profile-hobby">${profile.hobby}</p>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error">
+                        <h3>Error Connecting to Backend!</h3>
+                        <p>${error.message}</p>
+                        <p>Make sure you have <strong>server.py</strong> running and CORS is enabled if opening directly from the file system.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Start fetching when the page loads
+        fetchProfiles();
+    </script>
+</body>
+</html>
